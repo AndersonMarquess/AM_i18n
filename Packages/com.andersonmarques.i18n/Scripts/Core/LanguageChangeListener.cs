@@ -4,11 +4,11 @@ using TMPro;
 
 namespace AM_i18n.Scripts.Core
 {
-    public class LanguageChangeListner : MonoBehaviour
+    public class LanguageChangeListener : MonoBehaviour
     {
         public static void AddListnerToText(TMP_Text text, TextKey key, int amount = 0)
         {
-            if (text.transform.TryGetComponent(out LanguageChangeListner language))
+            if (text.transform.TryGetComponent(out LanguageChangeListener language))
             {
                 language.Text = text;
                 language.TextKey = key;

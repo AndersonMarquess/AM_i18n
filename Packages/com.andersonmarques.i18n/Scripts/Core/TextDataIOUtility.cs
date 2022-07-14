@@ -81,6 +81,12 @@ namespace AM_i18n.Scripts.Core
                 entryDataCollection.EntriesDatas.Add(newEntryData);
             }
 
+            string jsonFolderPath = Path.Combine(Application.streamingAssetsPath, "i18n");
+            if (File.Exists(jsonFolderPath) == false)
+            {
+                Directory.CreateDirectory(jsonFolderPath);
+            }
+
             File.WriteAllText(FilePath, JsonUtility.ToJson(entryDataCollection));
         }
     }
