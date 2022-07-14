@@ -4,8 +4,8 @@
   "displayName": "Internationalization",
   "description": "An easy to use i18n text solution",
   "unity": "2021.3",
-  "documentationUrl": "https://github.com/AndersonMarquess/AM_DI",
-  "licensesUrl": "https://github.com/AndersonMarquess/AM_DI/blob/main/LICENSE",
+  "documentationUrl": "https://github.com/AndersonMarquess/AM_i18n",
+  "licensesUrl": "https://github.com/AndersonMarquess/AM_i18n/blob/main/LICENSE",
   "keywords": [
     "plugin",
     "i18n"
