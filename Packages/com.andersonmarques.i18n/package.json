@@ -1,0 +1,19 @@
+{
+  "name": "com.andersonmarques.i18n",
+  "version": "1.0.0",
+  "displayName": "Internationalization",
+  "description": "An easy to use i18n text solution",
+  "unity": "2021.3",
+  "documentationUrl": "https://github.com/AndersonMarquess/AM_DI",
+  "licensesUrl": "https://github.com/AndersonMarquess/AM_DI/blob/main/LICENSE",
+  "keywords": [
+    "plugin",
+    "i18n"
+  ],
+  "author": {
+    "name": "Anderson Marques",
+    "url": "https://github.com/AndersonMarquess"
+  },
+  "type": "library",
+  "category": "game module"
+}
