@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 
 namespace AM_i18n.Scripts.Core
 {
@@ -24,9 +25,9 @@ namespace AM_i18n.Scripts.Core
         private TextDataIOUtility _textDataIOUtility = null;
         private SerializedObject _serializedObject = null;
         private SerializedProperty _serializedPropertyGameLanguage = null;
-        private SerializedProperty _serializedPropertyTextEnumKey = null;
         private SerializedProperty _serializedPropertyTextKey = null;
         private SerializedProperty _serializedPropertyTextValue = null;
+        private TextKeySearchProvider _textKeySearchProvider = null;
 
         private void OnEnable()
         {
@@ -34,9 +35,16 @@ namespace AM_i18n.Scripts.Core
             _serializedObject ??= new SerializedObject(this);
 
             _serializedPropertyGameLanguage = _serializedObject.FindProperty("_entryLanguage");
-            _serializedPropertyTextEnumKey = _serializedObject.FindProperty("_textEnumKey");
             _serializedPropertyTextKey = _serializedObject.FindProperty("_textKey");
             _serializedPropertyTextValue = _serializedObject.FindProperty("_textValue");
+
+            _textKeySearchProvider = ScriptableObject.CreateInstance<TextKeySearchProvider>();
+            _textKeySearchProvider.RegisterCallback(tk => _textEnumKey = tk);
+        }
+
+        private void OnDestroy()
+        {
+            DestroyImmediate(_textKeySearchProvider);
         }
 
         private void OnGUI()
@@ -55,22 +63,35 @@ namespace AM_i18n.Scripts.Core
         private void DrawSerializedPropreties()
         {
             _serializedObject.Update();
+
+            // Language
             EditorGUILayout.PropertyField(_serializedPropertyGameLanguage);
 
+            // Entry Enum Key
             GUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(_serializedPropertyTextEnumKey);
+            GUILayout.Label("Entry Enum Key", EditorStyles.label, GUILayout.ExpandWidth(false));
+            GUILayout.Space(60f);
+            if (GUILayout.Button(_textEnumKey.ToString(), EditorStyles.popup, GUILayout.ExpandWidth(true)))
+            {
+                Vector2 positionOffse = new Vector2(0f, 25f);
+                Vector2 mousePosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition) + positionOffse;
+                SearchWindow.Open(new SearchWindowContext(mousePosition), _textKeySearchProvider);
+            }
+
             if (_textEnumKey != default && GUILayout.Button("Print Key Value"))
             {
                 PrintContent();
             }
             GUILayout.EndHorizontal();
 
+            //Text Content
             if (_textEnumKey == default)
             {
                 EditorGUILayout.PropertyField(_serializedPropertyTextKey);
             }
             EditorGUILayout.PropertyField(_serializedPropertyTextValue);
 
+            // Default
             bool hasChanged = _serializedObject.ApplyModifiedProperties();
             if (hasChanged)
             {
