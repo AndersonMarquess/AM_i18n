@@ -73,8 +73,8 @@ namespace AM_i18n.Scripts.Core
             GUILayout.Space(60f);
             if (GUILayout.Button(_textEnumKey.ToString(), EditorStyles.popup, GUILayout.ExpandWidth(true)))
             {
-                Vector2 positionOffse = new Vector2(0f, 25f);
-                Vector2 mousePosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition) + positionOffse;
+                Vector2 positionOffset = new Vector2(0f, 25f);
+                Vector2 mousePosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition) + positionOffset;
                 SearchWindow.Open(new SearchWindowContext(mousePosition), _textKeySearchProvider);
             }
 

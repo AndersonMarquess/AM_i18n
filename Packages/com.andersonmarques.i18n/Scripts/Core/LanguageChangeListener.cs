@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using TMPro;
+using AM_i18n.Scripts.Attribute;
 
 namespace AM_i18n.Scripts.Core
 {
@@ -17,7 +18,7 @@ namespace AM_i18n.Scripts.Core
             }
         }
 
-        [field: SerializeField]
+        [field: SerializeField, TextKeySearchWindow]
         public TextKey TextKey { get; set; } = default;
         [field: SerializeField]
         public TMP_Text Text { get; set; } = null;
