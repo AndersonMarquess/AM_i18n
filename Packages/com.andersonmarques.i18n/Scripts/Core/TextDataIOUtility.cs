@@ -45,7 +45,7 @@ namespace AM_i18n.Scripts.Core
             foreach (TextKey key in enumEntries)
             {
                 string keyText = key.ToString();
-                uint keyID = uint.Parse(keyText.Split("_")[1]);
+                uint keyID = uint.Parse(keyText.Split('_')[1]);
 
                 if (maxID < keyID)
                 {
