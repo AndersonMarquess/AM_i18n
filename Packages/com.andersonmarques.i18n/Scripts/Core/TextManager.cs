@@ -21,6 +21,28 @@ namespace AM_i18n.Scripts.Core
             }
         }
 
+        private static string GetSaveFolderKey()
+        {
+            return $"{Application.productName}_SaveFolder";
+        }
+
+        public static string GetSaveFolderPath()
+        {
+#if UNITY_EDITOR
+            return UnityEditor.EditorPrefs.GetString(GetSaveFolderKey());
+#else
+            return PlayerPrefs.GetString(GetSaveFolderKey());
+#endif
+        }
+
+        public static void SetSaveFolderPath(string path)
+        {
+            PlayerPrefs.SetString(GetSaveFolderKey(), path);
+#if UNITY_EDITOR
+            UnityEditor.EditorPrefs.SetString(GetSaveFolderKey(), path);
+#endif
+        }
+
         private const string TEXT_NOT_FOUND = "TEXT_NOT_FOUND";
         public event EventHandler OnLanguageChange = null;
         [SerializeField]

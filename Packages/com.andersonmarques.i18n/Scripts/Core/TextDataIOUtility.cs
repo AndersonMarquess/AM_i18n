@@ -10,7 +10,8 @@ namespace AM_i18n.Scripts.Core
     {
         private Language _currentGameLanguage = Language.en_US;
 
-        public string FilePath => Path.Combine(Application.streamingAssetsPath, "i18n", $"{_currentGameLanguage}.json");
+        public string SaveFolderPath => TextManager.GetSaveFolderPath();
+        public string FilePath => Path.Combine(SaveFolderPath, $"{_currentGameLanguage}.json");
 
         public TextDataIOUtility(Language currentGameLanguage)
         {
@@ -38,8 +39,22 @@ namespace AM_i18n.Scripts.Core
 
         public uint WriteKeyToEnum(string textKey)
         {
-            uint maxID = 0;
             StringBuilder textKeyEntries = new StringBuilder();
+            uint newMaxID = ExtractTextKeyContentAndReturnEmptyID(textKeyEntries);
+            textKey = textKey.Replace("_", "").Replace(" ", "");
+            textKeyEntries.AppendLine($"{textKey}_{newMaxID} = {newMaxID}");
+
+            string textKeyBuildedFile = BuildTextFileFrom(newMaxID, textKeyEntries);
+
+            File.WriteAllText(GetTextKeyPath(), textKeyBuildedFile);
+            File.WriteAllText(GetTextKeyPathBackup(), textKeyBuildedFile);
+
+            return newMaxID;
+        }
+
+        private uint ExtractTextKeyContentAndReturnEmptyID(StringBuilder textKeyEntries)
+        {
+            uint maxID = 0;
             TextKey[] enumEntries = (TextKey[])Enum.GetValues(typeof(TextKey));
 
             foreach (TextKey key in enumEntries)
@@ -55,17 +70,18 @@ namespace AM_i18n.Scripts.Core
                 textKeyEntries.Append(keyText).Append(" = ").Append(keyID).AppendLine(",");
             }
 
-            uint newMaxID = maxID + 1;
-            textKey = textKey.Replace("_", "").Replace(" ", "");
-            textKeyEntries.AppendLine($"{textKey}_{newMaxID} = {newMaxID}");
-
-            string classWarningMessage = $"// Auto generated file. Max Id = {newMaxID}\n";
-            string classContent = classWarningMessage + "namespace AM_i18n.Scripts.Core\n{\npublic enum TextKey : uint\n{\n" + textKeyEntries.ToString() + "\n}\n}";
-            string textKeyPath = Path.Combine(Directory.GetCurrentDirectory(), "Packages", "com.andersonmarques.i18n", "Scripts", "i18n", "TextKey.cs");
-            File.WriteAllText(textKeyPath, classContent);
-
-            return newMaxID;
+            return maxID + 1;
         }
+
+        private string BuildTextFileFrom(uint newMaxID, StringBuilder textKeyEntries)
+        {
+            string classWarningMessage = $"// Auto generated file, manual changes will be ignored. Max Id = {newMaxID}\r\n";
+            return classWarningMessage + "namespace AM_i18n.Scripts.Core\r\n{\r\n\tpublic enum TextKey : uint\r\n\t{\r\n" + textKeyEntries.ToString() + "\r\n\t}\r\n}";
+        }
+
+        private static string GetTextKeyPath() => Path.Combine(Directory.GetCurrentDirectory(), "Packages", "com.andersonmarques.i18n", "Scripts", "i18n", "TextKey.cs");
+
+        private string GetTextKeyPathBackup() => Path.Combine(Directory.GetCurrentDirectory(), SaveFolderPath, "TextKeyBackup.cs");
 
         public void SaveDataToJSON(Language currentGameLanguage, uint keyID, string textValue)
         {
@@ -81,13 +97,31 @@ namespace AM_i18n.Scripts.Core
                 entryDataCollection.EntriesDatas.Add(newEntryData);
             }
 
-            string jsonFolderPath = Path.Combine(Application.streamingAssetsPath, "i18n");
+            string jsonFolderPath = SaveFolderPath;
             if (File.Exists(jsonFolderPath) == false)
             {
                 Directory.CreateDirectory(jsonFolderPath);
             }
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(entryDataCollection));
+        }
+
+        public void RestoreEntryEnumKeyBackup()
+        {
+#if UNITY_EDITOR
+            bool restore = UnityEditor.EditorUtility.DisplayDialog("Restore Backup", "Do you want to restore the entry enum keys using the backup file?", "Restore", "Cancel");
+            if (restore == false) { return; }
+
+            string backupFile = File.ReadAllText(GetTextKeyPathBackup());
+            if (string.IsNullOrEmpty(backupFile))
+            {
+                Debug.LogWarning("Error: No backup file found. Make sure the folder with the TextKeyBackup.cs is set in the \"Tools/Text Manager\" window");
+                return;
+            }
+
+            File.WriteAllText(GetTextKeyPath(), backupFile);
+            UnityEditor.AssetDatabase.Refresh();
+#endif
         }
     }
 }

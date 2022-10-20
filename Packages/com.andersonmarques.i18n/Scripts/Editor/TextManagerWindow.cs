@@ -10,10 +10,16 @@ namespace AM_i18n.Scripts.Core
         private static void OpenWindow()
         {
             TextManagerWindow window = GetWindow<TextManagerWindow>("Text Manager", true);
+            Rect originalRect = window.position;
+            originalRect.width = 400f;
+            originalRect.height = 500f;
+            window.position = originalRect;
             window.Show();
         }
 
         [Header("New Entry Details")]
+        [SerializeField]
+        private DefaultAsset _saveFolder = null;
         [SerializeField]
         private Language _entryLanguage = Language.en_US;
         [SerializeField]
@@ -24,6 +30,7 @@ namespace AM_i18n.Scripts.Core
         private string _textValue = string.Empty;
         private TextDataIOUtility _textDataIOUtility = null;
         private SerializedObject _serializedObject = null;
+        private SerializedProperty _serializedPropertySaveFolder = null;
         private SerializedProperty _serializedPropertyGameLanguage = null;
         private SerializedProperty _serializedPropertyTextKey = null;
         private SerializedProperty _serializedPropertyTextValue = null;
@@ -34,16 +41,24 @@ namespace AM_i18n.Scripts.Core
             _textDataIOUtility ??= new TextDataIOUtility(_entryLanguage);
             _serializedObject ??= new SerializedObject(this);
 
+            _serializedPropertySaveFolder = _serializedObject.FindProperty("_saveFolder");
             _serializedPropertyGameLanguage = _serializedObject.FindProperty("_entryLanguage");
             _serializedPropertyTextKey = _serializedObject.FindProperty("_textKey");
             _serializedPropertyTextValue = _serializedObject.FindProperty("_textValue");
 
             _textKeySearchProvider = ScriptableObject.CreateInstance<TextKeySearchProvider>();
             _textKeySearchProvider.RegisterCallback(tk => _textEnumKey = tk);
+
+            if (_saveFolder == null || _saveFolder == default)
+            {
+                string saveFolderPath = TextManager.GetSaveFolderPath();
+                _saveFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(saveFolderPath);
+            }
         }
 
         private void OnDestroy()
         {
+            TextManager.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
             DestroyImmediate(_textKeySearchProvider);
         }
 
@@ -53,17 +68,25 @@ namespace AM_i18n.Scripts.Core
 
             GUI.enabled = CanCreateJsonEntry();
             GUILayout.Space(10f);
-            if (GUILayout.Button("Create"))
+            if (GUILayout.Button("Create", GUILayout.Height(50f)))
             {
                 SaveDataToJSON();
             }
             GUI.enabled = true;
+
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Restore Backup", GUILayout.Height(50f)))
+            {
+                _textDataIOUtility.RestoreEntryEnumKeyBackup();
+            }
         }
 
         private void DrawSerializedPropreties()
         {
             _serializedObject.Update();
 
+            // Folder
+            EditorGUILayout.PropertyField(_serializedPropertySaveFolder);
             // Language
             EditorGUILayout.PropertyField(_serializedPropertyGameLanguage);
 
@@ -95,14 +118,36 @@ namespace AM_i18n.Scripts.Core
             bool hasChanged = _serializedObject.ApplyModifiedProperties();
             if (hasChanged)
             {
+                TextManager.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
                 SceneView.RepaintAll();
             }
         }
 
         private bool CanCreateJsonEntry()
         {
+            bool hasSaveFolder = _saveFolder != default;
+            if (hasSaveFolder == false)
+            {
+                EditorGUILayout.HelpBox("No save folder defined", MessageType.Warning);
+                return false;
+            }
+
+
             bool hasKey = string.IsNullOrEmpty(_textKey) == false || _textEnumKey != default;
-            return hasKey && string.IsNullOrEmpty(_textValue) == false;
+            if (hasKey == false)
+            {
+                EditorGUILayout.HelpBox("No key defined", MessageType.Warning);
+                return false;
+            }
+
+            bool hasValue = string.IsNullOrEmpty(_textValue) == false;
+            if (hasValue == false)
+            {
+                EditorGUILayout.HelpBox("No text value found", MessageType.Warning);
+                return false;
+            }
+
+            return hasKey && hasValue && hasSaveFolder;
         }
 
         private void SaveDataToJSON()
