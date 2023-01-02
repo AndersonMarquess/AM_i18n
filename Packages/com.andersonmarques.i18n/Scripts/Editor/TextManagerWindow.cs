@@ -51,14 +51,14 @@ namespace AM_i18n.Scripts.Core
 
             if (_saveFolder == null || _saveFolder == default)
             {
-                string saveFolderPath = TextManager.GetSaveFolderPath();
+                string saveFolderPath = TextDataIOUtility.GetSaveFolderPath();
                 _saveFolder = AssetDatabase.LoadAssetAtPath<DefaultAsset>(saveFolderPath);
             }
         }
 
         private void OnDestroy()
         {
-            TextManager.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
+            TextDataIOUtility.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
             DestroyImmediate(_textKeySearchProvider);
         }
 
@@ -118,7 +118,7 @@ namespace AM_i18n.Scripts.Core
             bool hasChanged = _serializedObject.ApplyModifiedProperties();
             if (hasChanged)
             {
-                TextManager.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
+                TextDataIOUtility.SetSaveFolderPath(AssetDatabase.GetAssetPath(_saveFolder));
                 SceneView.RepaintAll();
             }
         }

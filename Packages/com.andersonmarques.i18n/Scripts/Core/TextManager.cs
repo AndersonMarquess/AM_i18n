@@ -13,34 +13,25 @@ namespace AM_i18n.Scripts.Core
             {
                 if (_instance == null)
                 {
-                    GameObject newGb = new GameObject("[TextManager]");
-                    _instance = newGb.AddComponent<TextManager>();
-                    _instance.SetGameLanguage(Language.en_US);
+                    Initialize();
                 }
                 return _instance;
             }
         }
 
-        private static string GetSaveFolderKey()
+        private static void Initialize()
         {
-            return $"{Application.productName}_SaveFolder";
-        }
-
-        public static string GetSaveFolderPath()
-        {
-#if UNITY_EDITOR
-            return UnityEditor.EditorPrefs.GetString(GetSaveFolderKey());
-#else
-            return PlayerPrefs.GetString(GetSaveFolderKey());
-#endif
-        }
-
-        public static void SetSaveFolderPath(string path)
-        {
-            PlayerPrefs.SetString(GetSaveFolderKey(), path);
-#if UNITY_EDITOR
-            UnityEditor.EditorPrefs.SetString(GetSaveFolderKey(), path);
-#endif
+            _instance = GameObject.FindObjectOfType<TextManager>();
+            if (_instance == null)
+            {
+                GameObject newGb = new GameObject("[TextManager]");
+                _instance = newGb.AddComponent<TextManager>();
+                _instance.SetGameLanguage(Language.en_US);
+            }
+            else
+            {
+                _instance.LoadContentIfNull();
+            }
         }
 
         private const string TEXT_NOT_FOUND = "TEXT_NOT_FOUND";
@@ -54,7 +45,16 @@ namespace AM_i18n.Scripts.Core
         {
             _currentGameLanguage = language;
             LoadLanguageContent();
-            OnLanguageChange?.Invoke(this, EventArgs.Empty);
+            NotifyOnLanguageChange();
+        }
+
+        private void LoadContentIfNull()
+        {
+            if (_textDataIOUtility == null)
+            {
+                LoadLanguageContent();
+                NotifyOnLanguageChange();
+            }
         }
 
         private void LoadLanguageContent()
@@ -72,6 +72,11 @@ namespace AM_i18n.Scripts.Core
             }
 
             entryDataCollection.EntriesDatas?.Clear();
+        }
+
+        private void NotifyOnLanguageChange()
+        {
+            OnLanguageChange?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>

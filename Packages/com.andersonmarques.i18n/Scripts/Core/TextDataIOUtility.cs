@@ -8,10 +8,29 @@ namespace AM_i18n.Scripts.Core
 {
     public class TextDataIOUtility
     {
+        private static string SAVE_FOLDER_KEY => $"{Application.productName}_SaveFolder";
+
+        public static string GetSaveFolderPath()
+        {
+#if UNITY_EDITOR
+            return UnityEditor.EditorPrefs.GetString(SAVE_FOLDER_KEY);
+#else
+            return PlayerPrefs.GetString(SAVE_FOLDER_KEY);
+#endif
+        }
+
+        public static void SetSaveFolderPath(string path)
+        {
+            PlayerPrefs.SetString(SAVE_FOLDER_KEY, path);
+#if UNITY_EDITOR
+            UnityEditor.EditorPrefs.SetString(SAVE_FOLDER_KEY, path);
+#endif
+        }
+
         private Language _currentGameLanguage = Language.en_US;
 
-        public string SaveFolderPath => TextManager.GetSaveFolderPath();
-        public string FilePath => Path.Combine(SaveFolderPath, $"{_currentGameLanguage}.json");
+        public string JsonContentFolderPath => Path.Combine(Application.streamingAssetsPath, "Localization");
+        public string FilePath(string sourcePath) => Path.Combine(sourcePath, $"{_currentGameLanguage}.json");
 
         public TextDataIOUtility(Language currentGameLanguage)
         {
@@ -21,19 +40,16 @@ namespace AM_i18n.Scripts.Core
         public EntryDataCollection LoadEntryDataCollect(Language currentGameLanguage)
         {
             _currentGameLanguage = currentGameLanguage;
-            EntryDataCollection entryDataCollection = null;
 
-            if (File.Exists(FilePath))
+            string jsonContentPath = FilePath(JsonContentFolderPath);
+            if (File.Exists(jsonContentPath))
             {
-                string json = File.ReadAllText(FilePath);
-                entryDataCollection = JsonUtility.FromJson<EntryDataCollection>(json);
-            }
-            else
-            {
-                entryDataCollection = new EntryDataCollection();
-                entryDataCollection.EntriesDatas = new List<EntryData>();
+                string json = File.ReadAllText(jsonContentPath);
+                return JsonUtility.FromJson<EntryDataCollection>(json);
             }
 
+            EntryDataCollection entryDataCollection = new EntryDataCollection();
+            entryDataCollection.EntriesDatas = new List<EntryData>();
             return entryDataCollection;
         }
 
@@ -81,7 +97,7 @@ namespace AM_i18n.Scripts.Core
 
         private static string GetTextKeyPath() => Path.Combine(Directory.GetCurrentDirectory(), "Packages", "com.andersonmarques.i18n", "Scripts", "i18n", "TextKey.cs");
 
-        private string GetTextKeyPathBackup() => Path.Combine(Directory.GetCurrentDirectory(), SaveFolderPath, "TextKeyBackup.cs");
+        private string GetTextKeyPathBackup() => Path.Combine(Directory.GetCurrentDirectory(), GetSaveFolderPath(), "TextKeyBackup.cs");
 
         public void SaveDataToJSON(Language currentGameLanguage, uint keyID, string textValue)
         {
@@ -97,13 +113,12 @@ namespace AM_i18n.Scripts.Core
                 entryDataCollection.EntriesDatas.Add(newEntryData);
             }
 
-            string jsonFolderPath = SaveFolderPath;
-            if (File.Exists(jsonFolderPath) == false)
+            if (File.Exists(JsonContentFolderPath) == false)
             {
-                Directory.CreateDirectory(jsonFolderPath);
+                Directory.CreateDirectory(JsonContentFolderPath);
             }
 
-            File.WriteAllText(FilePath, JsonUtility.ToJson(entryDataCollection));
+            File.WriteAllText(FilePath(JsonContentFolderPath), JsonUtility.ToJson(entryDataCollection));
         }
 
         public void RestoreEntryEnumKeyBackup()
