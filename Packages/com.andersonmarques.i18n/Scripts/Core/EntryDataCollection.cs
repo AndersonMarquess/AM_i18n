@@ -7,6 +7,11 @@ namespace AM_i18n.Scripts.Core
     {
         public List<EntryData> EntriesDatas = null;
 
+        public EntryDataCollection()
+        {
+            EntriesDatas ??= new List<EntryData>();
+        }
+
         public bool AddTextToExistingEntryData(uint keyID, string textValue)
         {
             for (int i = 0; i < EntriesDatas.Count; i++)

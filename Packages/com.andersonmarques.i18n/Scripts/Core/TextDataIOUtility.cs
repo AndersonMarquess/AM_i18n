@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEngine;
@@ -27,30 +26,61 @@ namespace AM_i18n.Scripts.Core
 #endif
         }
 
-        private Language _currentGameLanguage = Language.en_US;
-
+        private int _currentGameLanguageIndex = default;
+        public string[] EntryLanguages { get; private set; } = null;
         public string JsonContentFolderPath => Path.Combine(Application.streamingAssetsPath, "Localization");
-        public string FilePath(string sourcePath) => Path.Combine(sourcePath, $"{_currentGameLanguage}.json");
-
-        public TextDataIOUtility(Language currentGameLanguage)
+        public string FilePath(string sourcePath) => Path.Combine(sourcePath, $"{GetCurrentLanguage}.json");
+        public string GetCurrentLanguage
         {
-            _currentGameLanguage = currentGameLanguage;
+            get
+            {
+                if (EntryLanguages != null && EntryLanguages.Length > _currentGameLanguageIndex)
+                {
+                    return EntryLanguages[_currentGameLanguageIndex];
+                }
+                return string.Empty;
+            }
         }
 
-        public EntryDataCollection LoadEntryDataCollect(Language currentGameLanguage)
+        /// <summary>
+        /// Ex. new TextDataIOUtility("en_US");
+        /// </summary>
+        /// <param name="currentGameLanguage"></param>
+        public TextDataIOUtility(string currentGameLanguage = default)
         {
-            _currentGameLanguage = currentGameLanguage;
+            EntryLanguages = LanguageEntryDataIOUtility.LoadLanguagesOptions(JsonContentFolderPath);
+            if (string.IsNullOrEmpty(currentGameLanguage) == false)
+            {
+                _currentGameLanguageIndex = Array.IndexOf(EntryLanguages, currentGameLanguage.ToString());
+            }
+        }
 
+        /// <summary>
+        /// Ex. LoadEntryDataCollect("en_US");
+        /// </summary>
+        /// <param name="currentGameLanguage"></param>
+        /// <returns></returns>
+        public EntryDataCollection LoadEntryDataCollect(string currentGameLanguage)
+        {
+            int currentGameLanguageIndex = Array.IndexOf(EntryLanguages, currentGameLanguage);
+            return LoadEntryDataCollect(currentGameLanguageIndex);
+        }
+
+        public EntryDataCollection LoadEntryDataCollect(int currentGameLanguageIndex)
+        {
+            if (currentGameLanguageIndex < 0 || currentGameLanguageIndex > EntryLanguages.Length) { return null; }
+
+            _currentGameLanguageIndex = currentGameLanguageIndex;
             string jsonContentPath = FilePath(JsonContentFolderPath);
             if (File.Exists(jsonContentPath))
             {
                 string json = File.ReadAllText(jsonContentPath);
-                return JsonUtility.FromJson<EntryDataCollection>(json);
+                if (string.IsNullOrEmpty(json) == false)
+                {
+                    return JsonUtility.FromJson<EntryDataCollection>(json);
+                }
             }
-
-            EntryDataCollection entryDataCollection = new EntryDataCollection();
-            entryDataCollection.EntriesDatas = new List<EntryData>();
-            return entryDataCollection;
+            return new EntryDataCollection();
         }
 
         public uint WriteKeyToEnum(string textKey)
@@ -99,9 +129,9 @@ namespace AM_i18n.Scripts.Core
 
         private string GetTextKeyPathBackup() => Path.Combine(Directory.GetCurrentDirectory(), GetSaveFolderPath(), "TextKeyBackup.cs");
 
-        public void SaveDataToJSON(Language currentGameLanguage, uint keyID, string textValue)
+        public void SaveDataToJSON(int entryLanguageIndex, uint keyID, string textValue)
         {
-            EntryDataCollection entryDataCollection = LoadEntryDataCollect(currentGameLanguage);
+            EntryDataCollection entryDataCollection = LoadEntryDataCollect(entryLanguageIndex);
 
             if (entryDataCollection.AddTextToExistingEntryData(keyID, textValue) == false)
             {

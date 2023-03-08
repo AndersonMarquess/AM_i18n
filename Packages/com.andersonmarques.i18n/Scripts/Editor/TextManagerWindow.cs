@@ -21,8 +21,6 @@ namespace AM_i18n.Scripts.Core
         [SerializeField]
         private DefaultAsset _saveFolder = null;
         [SerializeField]
-        private Language _entryLanguage = Language.en_US;
-        [SerializeField]
         private TextKey _textEnumKey = TextKey.NONE_0;
         [SerializeField]
         private string _textKey = string.Empty;
@@ -31,18 +29,17 @@ namespace AM_i18n.Scripts.Core
         private TextDataIOUtility _textDataIOUtility = null;
         private SerializedObject _serializedObject = null;
         private SerializedProperty _serializedPropertySaveFolder = null;
-        private SerializedProperty _serializedPropertyGameLanguage = null;
         private SerializedProperty _serializedPropertyTextKey = null;
         private SerializedProperty _serializedPropertyTextValue = null;
         private TextKeySearchProvider _textKeySearchProvider = null;
+        private int _currentLanguageEntryIndex = default;
 
         private void OnEnable()
         {
-            _textDataIOUtility ??= new TextDataIOUtility(_entryLanguage);
+            _textDataIOUtility ??= new TextDataIOUtility();
             _serializedObject ??= new SerializedObject(this);
 
             _serializedPropertySaveFolder = _serializedObject.FindProperty("_saveFolder");
-            _serializedPropertyGameLanguage = _serializedObject.FindProperty("_entryLanguage");
             _serializedPropertyTextKey = _serializedObject.FindProperty("_textKey");
             _serializedPropertyTextValue = _serializedObject.FindProperty("_textValue");
 
@@ -87,8 +84,13 @@ namespace AM_i18n.Scripts.Core
 
             // Folder
             EditorGUILayout.PropertyField(_serializedPropertySaveFolder);
+
             // Language
-            EditorGUILayout.PropertyField(_serializedPropertyGameLanguage);
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label("Entry Language", EditorStyles.label, GUILayout.ExpandWidth(false));
+            GUILayout.Space(60f);
+            _currentLanguageEntryIndex = EditorGUILayout.Popup(_currentLanguageEntryIndex, _textDataIOUtility.EntryLanguages);
+            EditorGUILayout.EndHorizontal();
 
             // Entry Enum Key
             GUILayout.BeginHorizontal();
@@ -158,7 +160,7 @@ namespace AM_i18n.Scripts.Core
                 lastKeyID = _textDataIOUtility.WriteKeyToEnum(_textKey);
             }
 
-            _textDataIOUtility.SaveDataToJSON(_entryLanguage, lastKeyID, _textValue);
+            _textDataIOUtility.SaveDataToJSON(_currentLanguageEntryIndex, lastKeyID, _textValue);
 
             GUI.FocusControl(null);
 
@@ -171,7 +173,7 @@ namespace AM_i18n.Scripts.Core
 
         private void PrintContent()
         {
-            EntryDataCollection entryDataCollection = _textDataIOUtility.LoadEntryDataCollect(_entryLanguage);
+            EntryDataCollection entryDataCollection = _textDataIOUtility.LoadEntryDataCollect(_currentLanguageEntryIndex);
             for (int i = 0; i < entryDataCollection.EntriesDatas.Count; i++)
             {
                 EntryData entryData = entryDataCollection.EntriesDatas[i];

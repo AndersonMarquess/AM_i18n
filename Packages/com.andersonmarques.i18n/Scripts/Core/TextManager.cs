@@ -26,7 +26,7 @@ namespace AM_i18n.Scripts.Core
             {
                 GameObject newGb = new GameObject("[TextManager]");
                 _instance = newGb.AddComponent<TextManager>();
-                _instance.SetGameLanguage(Language.en_US);
+                _instance.SetGameLanguage("en_US");
             }
             else
             {
@@ -37,11 +37,15 @@ namespace AM_i18n.Scripts.Core
         private const string TEXT_NOT_FOUND = "TEXT_NOT_FOUND";
         public event EventHandler OnLanguageChange = null;
         [SerializeField]
-        private Language _currentGameLanguage = Language.en_US;
+        private string _currentGameLanguage = default;
         private TextDataIOUtility _textDataIOUtility = null;
         private Dictionary<TextKey, string[]> _textDataJson = null;
 
-        public void SetGameLanguage(Language language)
+        /// <summary>
+        /// Ex. SetGameLanguage("en_US")
+        /// </summary>
+        /// <param name="language"></param>
+        public void SetGameLanguage(string language)
         {
             _currentGameLanguage = language;
             LoadLanguageContent();

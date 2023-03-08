@@ -13,8 +13,8 @@ namespace AM_i18n.Scripts.Example
 
         private void Awake()
         {
-            _ptBrButton.onClick.AddListener(() => TextManager.Instance.SetGameLanguage(Language.pt_BR));
-            _enUsButton.onClick.AddListener(() => TextManager.Instance.SetGameLanguage(Language.en_US));
+            _ptBrButton.onClick.AddListener(() => TextManager.Instance.SetGameLanguage("pt_BR"));
+            _enUsButton.onClick.AddListener(() => TextManager.Instance.SetGameLanguage("en_US"));
         }
     }
 }
