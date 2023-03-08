@@ -40,7 +40,7 @@ https://github.com/AndersonMarquess/AM_i18n.git?path=/Packages/com.andersonmarqu
 
 ```cs
     // Load all text for the targeted language
-    TextManager.Instance.SetGameLanguage(Language.pt_BR);
+    TextManager.Instance.SetGameLanguage("pt_BR");
 
     // Add language translation support in runtime
     LanguageChangeListener.AddListnerToText(_myTextMeshComponent, _targetKey);    
